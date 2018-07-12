@@ -62,6 +62,13 @@ class LogQuery {
 			result = jdbcTemplate.queryForList(query)
 			repository.save(new SQLResult(sql:query.replaceAll("\n","").replaceAll(" ", ""),resultTerm:result,resultThread:null))
 		}
+		else {
+			result.forEach{
+				if(it.date instanceof Date) {
+					it.date = new java.sql.Timestamp(it.date.getTime())
+				}
+			}
+		}
 		
         return result
     }
