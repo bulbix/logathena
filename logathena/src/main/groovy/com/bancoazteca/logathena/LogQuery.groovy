@@ -10,14 +10,17 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Component
 
 import java.sql.Timestamp
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.ZoneId
 
 @Component
 @Slf4j
 class LogQuery {
 
     @Autowired JdbcTemplate jdbcTemplate
+	@Autowired SQLResultRepository repository
 
     List<Map<String,Object>> searchTerm(ParamsBusqueda params) {
         String query = """SELECT * FROM logbaz."${params.fechaLog.replace("-","_")}" """
@@ -52,7 +55,15 @@ class LogQuery {
 		query += " LIMIT ${params.limitResults}"
       
         log.info(query)
-        return jdbcTemplate.queryForList(query)
+		
+		List<Map<String,Object>> result = repository.findById(query.replaceAll("\n","").replaceAll(" ", ""))?.value?.resultTerm
+		
+		if(!result) {
+			result = jdbcTemplate.queryForList(query)
+			repository.save(new SQLResult(sql:query.replaceAll("\n","").replaceAll(" ", ""),resultTerm:result,resultThread:null))
+		}
+		
+        return result
     }
 
     List<String> getThread(Map<String,Object> document, String tableName){
@@ -62,16 +73,44 @@ class LogQuery {
             ORDER BY date ASC'''
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS")
+		String fechaInicial, fechaFinal
+		
+		if(document.date instanceof Date) {
+			Instant instantDateLog = document.date.toInstant();
+			LocalDateTime dtLog = LocalDateTime.ofInstant(instantDateLog, ZoneId.systemDefault())
+			fechaInicial = dtLog.minusSeconds(2).format(formatter)
+			fechaFinal = dtLog.plusSeconds(2).format(formatter)
+		}
+		else {
+			fechaInicial = document.date.toLocalDateTime().minusSeconds(2).format(formatter)
+			fechaFinal = document.date.toLocalDateTime().plusSeconds(2).format(formatter)
+		}
 
-        String fechaInicial = document.date.toLocalDateTime().minusSeconds(2).format(formatter)
-        String fechaFinal = document.date.toLocalDateTime().plusSeconds(2).format(formatter)
+      
 
         String sql = String.format(query,tableName,document.thread,fechaInicial,fechaFinal)
         log.info(sql)
-
-        return jdbcTemplate.queryForList(sql).collect {
-            String.format("%s %s  %s %s - %s", it.date.toLocalDateTime().format(formatter),it.level,it.thread,it.class,it.body)
-        }
+		
+		List<String> result = repository.findById(sql.replaceAll("\n","").replaceAll(" ", ""))?.value?.resultThread
+		
+		if(!result) {
+			result = jdbcTemplate.queryForList(sql).collect {
+				
+				LocalDateTime dtLog
+				if(document.date instanceof Date) {
+					Instant instantDateLog = document.date.toInstant();
+					dtLog = LocalDateTime.ofInstant(instantDateLog, ZoneId.systemDefault())
+				}
+				else {
+					dtLog = document.date.toLocalDateTime()
+				}
+				
+	            String.format("%s %s  %s %s - %s", dtLog.format(formatter),it.level,it.thread,it.class,it.body)
+	        }
+			repository.save(new SQLResult(sql:sql.replaceAll("\n","").replaceAll(" ", ""),resultTerm:null,resultThread:result))
+		}
+		
+		return result
 
     }
 

@@ -12,7 +12,7 @@ import javax.sql.DataSource;
 import java.util.Properties;
 
 @Configuration
-public class AthenaConfiguration {
+public class AthenaConfig {
 
     @Value("${athena.driverClassName}")
     String driverClassName;

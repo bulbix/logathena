@@ -35,6 +35,8 @@ bootJar {
 dependencies {
     compile('org.springframework.boot:spring-boot-starter-jdbc')
     compile('com.syncron.amazonaws:simba-athena-jdbc-driver:2.0.2')
+	compile('org.springframework.boot:spring-boot-starter-data-mongodb')
+	compile('redis.clients:jedis:2.9.0')
     compile('org.codehaus.groovy:groovy')
     testCompile('org.springframework.boot:spring-boot-starter-test')
     compile('io.krakens:java-grok:0.1.9')
