@@ -25,7 +25,7 @@ class LogQuery {
     List<Map<String,Object>> searchTerm(ParamsBusqueda params) {
         String query = """SELECT * FROM logbaz."${params.fechaLog.replace("-","_")}" """
 		
-		query += params.textoLibre?" WHERE body = '${params.textoLibre}'":""
+		query += params.textoLibre?" WHERE body like '%${params.textoLibre}%'":""
 		
 		if(params.alias) {
 			query += query.contains("WHERE")?" AND ":" WHERE " + "alias = '${params.alias}'"
@@ -52,7 +52,7 @@ class LogQuery {
 			query+=" AND date BETWEEN parse_datetime('${params.fechaLog} ${rangoTiempo[0]}','yyyy-MM-dd HH:mm:ss') AND parse_datetime('${params.fechaLog} ${rangoTiempo[1]}','yyyy-MM-dd HH:mm:ss')"
 		}
 		
-		query += " LIMIT ${params.limitResults}"
+		query += " ORDER BY date ASC LIMIT ${params.limitResults}"
       
         log.info(query)
 		
