@@ -49,7 +49,7 @@ class LogQuery {
 		
 		if(params.rangoTiempo) {
 			String[] rangoTiempo = params.rangoTiempo.split("-");
-			query+=" AND date BETWEEN parse_datetime('${params.fechaLog} ${rangoTiempo[0]}','yyyy-MM-dd HH:mm:ss') AND parse_datetime('${params.fechaLog} ${rangoTiempo[1]}','yyyy-MM-dd HH:mm:ss')"
+			query+=" AND date BETWEEN parse_datetime('${params.fechaLog[0..-2]} ${rangoTiempo[0]}','yyyy-MM-dd HH:mm:ss') AND parse_datetime('${params.fechaLog[0..-2]} ${rangoTiempo[1]}','yyyy-MM-dd HH:mm:ss')"
 		}
 		
 		query += " ORDER BY date ASC LIMIT ${params.limitResults}"
